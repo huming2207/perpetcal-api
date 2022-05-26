@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use chrono::{TimeZone, DateTime, Utc};
 use chrono_tz::Tz;
-use icalendar::{parser::{unfold, read_calendar_simple}, Component, CalendarComponent, Todo, DatePerhapsTime, Event};
+use icalendar::{parser::{unfold, read_calendar}, Component, CalendarComponent, Todo, DatePerhapsTime, Event};
 use serde::{Serialize, Deserialize};
 
 use crate::error_type::PerpetcalError;
@@ -60,7 +60,7 @@ pub fn serialize_to_string(item: &Vec<CalendarItem>, fmt: &str, sort: bool, limi
         });
 
         for it in &sorted_item {
-            if limit != 0 && ctr > limit {
+            if limit != 0 && ctr >= limit {
                 break;
             }
 
@@ -94,7 +94,7 @@ pub fn serialize_to_string(item: &Vec<CalendarItem>, fmt: &str, sort: bool, limi
         }
     } else {
         for it in item {
-            if limit != 0 && ctr > limit {
+            if limit != 0 && ctr >= limit {
                 break;
             }
     
@@ -261,10 +261,10 @@ impl CalendarItem {
 
     pub async fn from_ical_url(url: &str, tzid: String, time_fmt: &str, sort: bool, limit: usize) -> Result<Vec<CalendarItemStr>, PerpetcalError> {
         let cal_text = fetch_ical(url).await?;
-        let generic_component = read_calendar_simple(&cal_text).map_err(|err| PerpetcalError::IcalParseError(err.to_string()))?;
+        let generic_component = read_calendar(&cal_text).map_err(|err| PerpetcalError::IcalParseError(err.to_string()))?;
         
         let mut cal_items: Vec<CalendarItem> = Vec::new();
-        for item in generic_component {
+        for item in generic_component.components {
             match CalendarComponent::from(item) {
                 CalendarComponent::Todo(cal_item) =>  {
                     cal_items.push(CalendarItem::from_todo(cal_item, tzid.clone())?);
