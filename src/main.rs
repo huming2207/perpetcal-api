@@ -8,7 +8,7 @@ use ical_endpoint::ical_handler;
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .route("/api/ical", web::post().to(ical_handler))
+            .route("/ical", web::post().to(ical_handler))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
